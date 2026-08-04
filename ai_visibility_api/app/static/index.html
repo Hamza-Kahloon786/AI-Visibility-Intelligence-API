@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Visibility Intelligence</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --border: #e2e5ea;
+    --text: #1c2129;
+    --muted: #667085;
+    --primary: #2f5bea;
+    --primary-dark: #2447c4;
+    --green: #12805c;
+    --green-bg: #e6f6ef;
+    --red: #b3261e;
+    --red-bg: #fbe9e8;
+    --amber: #9a6700;
+    --amber-bg: #fff3d6;
+    --gray-bg: #eef0f3;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 80px; }
+  header { margin-bottom: 24px; }
+  header h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  .badge-note {
+    display: inline-block; margin-top: 10px; font-size: 0.75rem;
+    color: var(--muted); background: var(--gray-bg); border-radius: 999px;
+    padding: 4px 10px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; margin-bottom: 16px;
+  }
+  .panel h2 { font-size: 1rem; margin: 0 0 14px; }
+  label { display: block; font-size: 0.8rem; color: var(--muted); margin: 10px 0 4px; }
+  label:first-child { margin-top: 0; }
+  input[type="text"], textarea, select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.9rem; font-family: inherit; background: #fff; color: var(--text);
+  }
+  textarea { resize: vertical; min-height: 54px; }
+  button {
+    font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    border-radius: 8px; border: 1px solid transparent; padding: 8px 16px;
+    background: var(--primary); color: #fff; transition: background 0.15s;
+  }
+  button:hover:not(:disabled) { background: var(--primary-dark); }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+  button.secondary { background: #fff; color: var(--text); border-color: var(--border); }
+  button.secondary:hover:not(:disabled) { background: var(--gray-bg); }
+  button.small { padding: 4px 10px; font-size: 0.75rem; }
+  .row-actions { margin-top: 14px; display: flex; gap: 10px; align-items: center; }
+  .spinner {
+    width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite;
+    display: inline-block; vertical-align: -2px; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #error-banner {
+    display: none; background: var(--red-bg); color: var(--red); border: 1px solid #f3c6c3;
+    border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem;
+    white-space: pre-wrap;
+  }
+  #status-banner {
+    display: none; background: #eaf1ff; color: var(--primary-dark); border: 1px solid #c9dbff;
+    border-radius: var(--radius); padding: 10px 16px; margin-bottom: 16px; font-size: 0.85rem;
+  }
+  .profile-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+  .profile-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
+  .profile-sub { color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 16px; }
+  .stat-box { background: var(--gray-bg); border-radius: 8px; padding: 10px 12px; }
+  .stat-box .num { font-size: 1.1rem; font-weight: 700; }
+  .stat-box .label { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .chip { display: inline-block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.03em; padding: 2px 8px; border-radius: 999px; }
+  .chip-visible { background: var(--green-bg); color: var(--green); }
+  .chip-not_visible { background: var(--red-bg); color: var(--red); }
+  .chip-unknown { background: var(--gray-bg); color: var(--muted); }
+  .chip-high { background: var(--red-bg); color: var(--red); }
+  .chip-medium { background: var(--amber-bg); color: var(--amber); }
+  .chip-low { background: var(--gray-bg); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 10px; }
+  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.02em; }
+  tr:last-child td { border-bottom: none; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 6px; }
+  .filters > div { flex: 1; min-width: 130px; }
+  .rec-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .rec-card h3 { margin: 0 0 6px; font-size: 0.92rem; }
+  .rec-card .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .rec-card p { margin: 0 0 8px; font-size: 0.85rem; color: var(--text); }
+  .kw { display: inline-block; background: var(--gray-bg); border-radius: 999px; padding: 2px 9px;
+    font-size: 0.72rem; margin: 0 4px 4px 0; color: var(--muted); }
+  .empty-note { color: var(--muted); font-size: 0.85rem; padding: 10px 0; }
+  .score { font-variant-numeric: tabular-nums; }
+  footer { text-align: center; color: var(--muted); font-size: 0.75rem; margin-top: 30px; }
+  code { background: var(--gray-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>AI Visibility Intelligence</h1>
+    <p>Discover, score, and close AI-search visibility gaps for a business profile.</p>
+    <span class="badge-note">Optional demo UI &mdash; the graded deliverable is the JSON API itself.</span>
+  </header>
+
+  <div id="error-banner"></div>
+  <div id="status-banner"></div>
+
+  <div class="grid-2" id="setup-section">
+    <div class="panel">
+      <h2>1. Create a new business profile</h2>
+      <form id="create-form">
+        <label for="f-name">Business name</label>
+        <input type="text" id="f-name" required placeholder="Frase">
+        <label for="f-domain">Domain</label>
+        <input type="text" id="f-domain" required placeholder="frase.io">
+        <label for="f-industry">Industry</label>
+        <input type="text" id="f-industry" required placeholder="SEO Content Tools">
+        <label for="f-description">Description</label>
+        <textarea id="f-description" placeholder="AI-powered content briefs and SEO research"></textarea>
+        <label for="f-competitors">Competitors (comma-separated)</label>
+        <input type="text" id="f-competitors" placeholder="surferseo.com, marketmuse.com, clearscope.io">
+        <div class="row-actions">
+          <button type="submit" id="create-btn">Create profile</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>2. Or load an existing profile</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-top:0;">
+        Paste a <code>profile_uuid</code> you already created (e.g. via curl).
+      </p>
+      <label for="f-load-uuid">Profile UUID</label>
+      <input type="text" id="f-load-uuid" placeholder="e.g. 9aee0d5d-0942-44a7-a331-15eabf4cd5f8">
+      <div class="row-actions">
+        <button type="button" id="load-btn" class="secondary">Load profile</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="profile-section" style="display:none;">
+    <div class="panel">
+      <div class="profile-header">
+        <div>
+          <p class="profile-title" id="p-name"></p>
+          <p class="profile-sub" id="p-sub"></p>
+        </div>
+        <div class="row-actions" style="margin-top:0;">
+          <button type="button" id="run-btn">Run pipeline</button>
+          <button type="button" id="refresh-btn" class="secondary">Refresh</button>
+        </div>
+      </div>
+      <div class="stat-grid" id="p-stats"></div>
+    </div>
+
+    <div class="panel" id="run-summary-panel" style="display:none;">
+      <h2>Last pipeline run</h2>
+      <div class="stat-grid" id="run-stats"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Discovered queries</h2>
+      <div class="filters">
+        <div>
+          <label for="filter-status">Visibility status</label>
+          <select id="filter-status">
+            <option value="">All</option>
+            <option value="visible">Visible</option>
+            <option value="not_visible">Not visible</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </div>
+        <div>
+          <label for="filter-score">Min opportunity score</label>
+          <input type="text" id="filter-score" placeholder="e.g. 0.5">
+        </div>
+        <div style="flex:0;">
+          <button type="button" id="filter-btn" class="secondary">Apply</button>
+        </div>
+      </div>
+      <div id="queries-container"><p class="empty-note">No queries loaded yet.</p></div>
+    </div>
+
+    <div class="panel">
+      <h2>Content recommendations</h2>
+      <div id="recommendations-container"><p class="empty-note">No recommendations loaded yet.</p></div>
+    </div>
+  </div>
+
+  <footer>AI Visibility Intelligence API &middot; served from the same Flask app at <code>/api/v1</code></footer>
+</div>
+
+<script>
+const API = "/api/v1";
+let currentProfileUuid = localStorage.getItem("avi_profile_uuid") || null;
+
+const el = (id) => document.getElementById(id);
+const errorBanner = el("error-banner");
+const statusBanner = el("status-banner");
+
+function showError(message) {
+  errorBanner.textContent = message;
+  errorBanner.style.display = "block";
+  statusBanner.style.display = "none";
+}
+function clearError() { errorBanner.style.display = "none"; }
+function showStatus(message) {
+  statusBanner.textContent = message;
+  statusBanner.style.display = "block";
+  errorBanner.style.display = "none";
+}
+function clearStatus() { statusBanner.style.display = "none"; }
+
+async function apiFetch(path, options) {
+  let response;
+  try {
+    response = await fetch(API + path, options);
+  } catch (networkErr) {
+    throw new Error("Could not reach the API. Is the Flask server still running on this address?");
+  }
+  let body = null;
+  try { body = await response.json(); } catch (_) { /* no body */ }
+  if (!response.ok) {
+    const message = body && body.error ? body.error.message : ("HTTP " + response.status);
+    const details = body && body.error && body.error.details
+      ? "\n" + JSON.stringify(body.error.details, null, 2) : "";
+    throw new Error(message + details);
+  }
+  return body;
+}
+
+function fmtScore(v) { return v === null || v === undefined ? "–" : v.toFixed(3); }
+function fmtNum(v) { return v === null || v === undefined ? "–" : v.toLocaleString(); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+// --- Create profile -----------------------------------------------------
+
+el("create-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearError();
+  const competitorsRaw = el("f-competitors").value.trim();
+  const payload = {
+    name: el("f-name").value.trim(),
+    domain: el("f-domain").value.trim(),
+    industry: el("f-industry").value.trim(),
+    description: el("f-description").value.trim() || null,
+    competitors: competitorsRaw ? competitorsRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
+  };
+  const btn = el("create-btn");
+  btn.disabled = true;
+  btn.textContent = "Creating...";
+  try {
+    const profile = await apiFetch("/profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    showStatus("Profile created: " + profile.profile_uuid);
+    await loadProfile(profile.profile_uuid);
+    el("create-form").reset();
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Create profile";
+  }
+});
+
+// --- Load existing profile ----------------------------------------------
+
+el("load-btn").addEventListener("click", async () => {
+  const uuid = el("f-load-uuid").value.trim();
+  if (!uuid) { showError("Enter a profile UUID to load."); return; }
+  await loadProfile(uuid);
+});
+
+async function loadProfile(uuid) {
+  clearError();
+  try {
+    const profile = await apiFetch("/profiles/" + encodeURIComponent(uuid));
+    currentProfileUuid = uuid;
+    localStorage.setItem("avi_profile_uuid", uuid);
+    renderProfile(profile);
+    el("profile-section").style.display = "block";
+    el("run-summary-panel").style.display = "none";
+    await Promise.all([loadQueries(), loadRecommendations()]);
+  } catch (err) {
+    showError("Could not load profile: " + err.message);
+  }
+}
+
+function renderProfile(profile) {
+  el("p-name").textContent = profile.name + " (" + profile.domain + ")";
+  el("p-sub").textContent = profile.industry + " · status: " + profile.status +
+    " · " + profile.profile_uuid;
+  const stats = profile.stats || {};
+  const boxes = [
+    ["Queries discovered", fmtNum(stats.total_queries_discovered)],
+    ["Queries scored", fmtNum(stats.total_queries_scored)],
+    ["Avg opportunity score", fmtScore(stats.avg_opportunity_score)],
+    ["Missing visibility", fmtNum(stats.queries_missing_visibility)],
+    ["Recommendations", fmtNum(stats.total_recommendations)],
+    ["Pipeline runs", fmtNum(stats.total_pipeline_runs)],
+  ];
+  el("p-stats").innerHTML = boxes.map(([label, num]) =>
+    `<div class="stat-box"><div class="num">${num}</div><div class="label">${label}</div></div>`
+  ).join("");
+}
+
+// --- Run pipeline ---------------------------------------------------------
+
+el("run-btn").addEventListener("click", async () => {
+  if (!currentProfileUuid) return;
+  clearError();
+  const btn = el("run-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Running pipeline (10-30s+)...';
+  showStatus("Pipeline running: Discovery → Scoring → Recommendations. This calls the LLM once per query, so it can take a while.");
+  try {
+    const result = await apiFetch("/profiles/" + currentProfileUuid + "/run", { method: "POST" });
+    renderRunSummary(result);
+    clearStatus();
+    const profile = await apiFetch("/profiles/" + currentProfileUuid);
+    renderProfile(profile);
+    await Promise.all([loadQueries(), loadRecommendations()]);
+  } catch (err) {
+    showError("Pipeline run failed: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Run pipeline";
+  }
+});
+
+function renderRunSummary(run) {
+  el("run-summary-panel").style.display = "block";
+  const statusChip = run.status === "completed"
+    ? `<span class="chip chip-visible">completed</span>`
+    : `<span class="chip chip-not_visible">${escapeHtml(run.status)}</span>`;
+  const boxes = [
+    ["Status", statusChip],
+    ["Queries discovered", fmtNum(run.queries_discovered)],
+    ["Queries scored", fmtNum(run.queries_scored)],
+    ["Recommendations", fmtNum(run.content_recommendations.length)],
+    ["Tokens used", fmtNum(run.tokens_used)],
+  ];
+  el("run-stats").innerHTML = boxes.map(([label, val]) =>
+    `<div class="stat-box"><div class="num">${val}</div><div class="label">${label}</div></div>`
+  ).join("");
+  if (run.error_message) {
+    showError("Pipeline reported an error: " + run.error_message);
+  }
+}
+
+// --- Queries table ----------------------------------------------------
+
+el("refresh-btn").addEventListener("click", async () => {
+  if (!currentProfileUuid) return;
+  clearError();
+  const profile = await apiFetch("/profiles/" + currentProfileUuid);
+  renderProfile(profile);
+  await Promise.all([loadQueries(), loadRecommendations()]);
+});
+
+el("filter-btn").addEventListener("click", () => loadQueries());
+
+async function loadQueries() {
+  if (!currentProfileUuid) return;
+  clearError();
+  const status = el("filter-status").value;
+  const minScore = el("filter-score").value.trim();
+  const params = new URLSearchParams({ per_page: "50" });
+  if (status) params.set("status", status);
+  if (minScore) params.set("min_score", minScore);
+  try {
+    const data = await apiFetch("/profiles/" + currentProfileUuid + "/queries?" + params.toString());
+    renderQueries(data.queries);
+  } catch (err) {
+    showError("Could not load queries: " + err.message);
+  }
+}
+
+function renderQueries(queries) {
+  const container = el("queries-container");
+  if (!queries || queries.length === 0) {
+    container.innerHTML = '<p class="empty-note">No queries match these filters yet.</p>';
+    return;
+  }
+  const rows = queries.map((q) => `
+    <tr>
+      <td>${escapeHtml(q.query_text)}<br><span style="color:var(--muted); font-size:0.72rem;">${escapeHtml(q.query_intent || "")}</span></td>
+      <td>${fmtNum(q.estimated_search_volume)}</td>
+      <td>${q.competitive_difficulty === null ? "–" : q.competitive_difficulty}</td>
+      <td class="score">${fmtScore(q.opportunity_score)}</td>
+      <td><span class="chip chip-${q.visibility_status}">${q.visibility_status.replace("_", " ")}</span>
+        ${q.visibility_position ? "<br><span style=\"font-size:0.72rem; color:var(--muted);\">rank " + q.visibility_position + "</span>" : ""}
+      </td>
+      <td>${q.scoring_error ? `<span title="${escapeHtml(q.scoring_error)}" style="color:var(--red); font-size:0.72rem;">error</span>` : ""}</td>
+      <td><button type="button" class="secondary small" data-recheck="${q.query_uuid}">Recheck</button></td>
+    </tr>
+  `).join("");
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Query</th><th>Volume</th><th>Difficulty</th><th>Score</th><th>Visibility</th><th></th><th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  container.querySelectorAll("[data-recheck]").forEach((btn) => {
+    btn.addEventListener("click", () => recheckQuery(btn.getAttribute("data-recheck"), btn));
+  });
+}
+
+async function recheckQuery(queryUuid, btn) {
+  clearError();
+  btn.disabled = true;
+  btn.textContent = "...";
+  try {
+    await apiFetch("/queries/" + queryUuid + "/recheck", { method: "POST" });
+    await loadQueries();
+  } catch (err) {
+    showError("Recheck failed: " + err.message);
+    btn.disabled = false;
+    btn.textContent = "Recheck";
+  }
+}
+
+// --- Recommendations ----------------------------------------------------
+
+async function loadRecommendations() {
+  if (!currentProfileUuid) return;
+  clearError();
+  try {
+    const data = await apiFetch("/profiles/" + currentProfileUuid + "/recommendations");
+    renderRecommendations(data.recommendations);
+  } catch (err) {
+    showError("Could not load recommendations: " + err.message);
+  }
+}
+
+function renderRecommendations(recs) {
+  const container = el("recommendations-container");
+  if (!recs || recs.length === 0) {
+    container.innerHTML = '<p class="empty-note">No recommendations yet &mdash; run the pipeline first.</p>';
+    return;
+  }
+  container.innerHTML = recs.map((r) => `
+    <div class="rec-card">
+      <div class="meta">
+        <span class="chip chip-${r.priority}">${escapeHtml(r.priority)}</span>
+        <span style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em;">${escapeHtml(r.content_type.replace("_", " "))}</span>
+      </div>
+      <h3>${escapeHtml(r.title)}</h3>
+      <p>${escapeHtml(r.rationale)}</p>
+      <div>${(r.target_keywords || []).map(k => `<span class="kw">${escapeHtml(k)}</span>`).join("")}</div>
+    </div>
+  `).join("");
+}
+
+// --- Init -----------------------------------------------------------------
+
+if (currentProfileUuid) {
+  el("f-load-uuid").value = currentProfileUuid;
+  loadProfile(currentProfileUuid);
+}
+</script>
+</body>
+</html>
