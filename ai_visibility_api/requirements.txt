@@ -3,7 +3,10 @@ flask-sqlalchemy==3.1.1
 flask-migrate==4.0.7
 flask-limiter==3.8.0
 python-dotenv==1.0.1
-openai==2.53.0
+# Pinned to the last version supporting Python 3.9 (2.49.0+ requires 3.10+).
+# Still well past the 1.51.0 -> httpx "proxies" TypeError that affected older
+# 1.x releases -- see README/services/llm_client.py history.
+openai==2.48.0
 pydantic==2.9.2
 requests==2.32.3
 gunicorn==23.0.0
