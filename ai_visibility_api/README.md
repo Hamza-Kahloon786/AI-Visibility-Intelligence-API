@@ -416,12 +416,27 @@ isolation, ref-to-uuid mapping) rather than just "the function didn't crash."
 
 ## AI tool usage disclosure
 
-This project was built with **Claude Code** (Anthropic) as a coding
-assistant: scaffolding the Flask app-factory structure, drafting the agent
-prompt templates (subsequently reviewed/tightened by hand against the
-spec's prompt-engineering rubric), writing the pydantic/SQLAlchemy models,
-and drafting the pytest suite's fakes and fixtures. All architectural
-decisions documented in this README (opportunity score weighting, the
-DataProvider fallback design, agent failure-isolation boundaries, the Q1/Q2
-reference-key scheme) were made deliberately for this assessment, not
-auto-generated defaults.
+This project was built with **Claude Code** (Anthropic), used directly for
+the full implementation: the Flask app-factory structure, all SQLAlchemy
+models and migrations, the three agent classes and their prompts, the
+pipeline orchestrator, the API layer, the pytest suite (including the fake
+LLM client/data provider test doubles), and this README.
+
+What wasn't automatic: the open-ended design decisions the spec calls out as
+part of the evaluation were made deliberately, not left as defaults --
+the opportunity score's weighting and reasoning, the DataProvider fallback
+strategy (real DataForSEO vs. a documented deterministic heuristic, discussed
+below), the choice to use OpenAI only with two different models split by
+agent cost/quality tradeoff, the agent failure-isolation boundaries (which
+failures self-heal inside an agent vs. get isolated per-query by the
+orchestrator), and the Q1/Q2 reference-key scheme for Agent 3. Each was a
+specific choice made in conversation with the assistant, not accepted as a
+default suggestion.
+
+The build was also verified, not just generated: the full pytest suite was
+run to green, the live dev server was exercised end-to-end against the real
+OpenAI API (confirming real query discovery, scoring, and recommendations,
+not just mocked output), and two real bugs were caught this way -- a
+Flask-SQLAlchemy `.query` attribute collision from a poorly named
+relationship backref, and an `openai`/`httpx` version incompatibility that
+would have silently broken every LLM call regardless of API key validity.
