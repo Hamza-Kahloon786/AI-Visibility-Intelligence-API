@@ -8,6 +8,12 @@ python-dotenv==1.0.1
 # 1.x releases -- see README/services/llm_client.py history.
 openai==2.48.0
 pydantic==2.9.2
+# Required on Python <3.10: pydantic must evaluate "X | None"-style
+# annotations (used throughout app/, combined with `from __future__ import
+# annotations`) at model-definition time, and the native `|` union operator
+# on types doesn't exist as a runtime evaluation before 3.10. This package is
+# pydantic's own documented fix -- no source changes needed, just presence.
+eval_type_backport==0.4.0
 requests==2.32.3
 gunicorn==23.0.0
 pytest==8.3.3
