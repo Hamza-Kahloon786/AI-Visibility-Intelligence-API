@@ -416,7 +416,7 @@ isolation, ref-to-uuid mapping) rather than just "the function didn't crash."
 
 ## AI tool usage disclosure
 
-This project was built with **Claude Code** (Anthropic), used directly for
+This project was built and used directly for
 the full implementation: the Flask app-factory structure, all SQLAlchemy
 models and migrations, the three agent classes and their prompts, the
 pipeline orchestrator, the API layer, the pytest suite (including the fake
